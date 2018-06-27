@@ -1,0 +1,4 @@
+TRiCAN_GUI.egg-info
+.idea
+tricangui/__pycache__
+tricangui/version.py
