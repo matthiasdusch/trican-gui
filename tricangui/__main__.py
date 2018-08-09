@@ -9,6 +9,7 @@ import pandas as pd
 import tkinter as tk
 from tkinter import font as tkfont
 from tkinter import filedialog
+from tkinter import messagebox, simpledialog
 
 from trican import io
 
@@ -20,7 +21,7 @@ class MainApp(tk.Tk):
         self._frame = None
         self.title_font = tkfont.Font(family='Helvetica',
                                       size=18, weight="bold", slant="italic")
-
+        self.title('Tree Ring Chronology Altitude Normalization')
         self.switch_frame(Correction)
 
     def switch_frame(self, frame_class):
@@ -50,16 +51,40 @@ class MainApp(tk.Tk):
 
         filename = filedialog.askopenfilename(
             initialdir='../../testdaten',
-            title='Select a file containing the correction parameters',
-            filetypes=(('CSV', '*.csv'), ('all files', '*.*')))
+            title='Select a file containing the correction parameters',)
+            #filetypes=(('all files', '*.*')))
 
         cordf = pd.read_csv(filename, delim_whitespace=True, index_col=0)
         if 'factor' not in cordf.columns:
             cordf['factor'] = np.ones(len(cordf))
         if 'offset' not in cordf.columns:
-            cordf['offset'] = np.zeros(len(cordf))
+            cordf['offset'] = np.zeros(len(cordf))+0.4
 
         child.cordf = cordf
+
+    def enter_parameters(self, child):
+
+        if not hasattr(child, 'series'):
+            messagebox.showinfo("Warning",
+                                "Tree ring series must be loaded before " +
+                                "parameters can be entered")
+        else:
+            cordf = pd.DataFrame([], columns=['factor', 'offset', 'name'])
+            for i, ser in enumerate(child.series):
+                cordf.loc[i, 'name'] = ser.key
+                fac = simpledialog.askfloat(
+                    'Correction Factor',
+                    'Enter correction factor for %s:' % ser.key,
+                    initialvalue=1.0)
+                off = simpledialog.askfloat(
+                    'Correction Offset',
+                    'Enter correction offset for %s:' % ser.key,
+                    initialvalue=0.0)
+                cordf.loc[i, 'factor'] = fac
+                cordf.loc[i, 'offset'] = off
+            cordf.index = cordf.name
+            cordf.drop('name', axis=1, inplace=True)
+            child.cordf = cordf
 
     def write_correction(self, child, method=None):
 
@@ -179,7 +204,7 @@ class Correction(tk.Frame):
         frame2.pack(fill=tk.X)
         btn2 = tk.Button(frame2,
                                text="Insert parameters manually",
-                               command=lambda: parent.select_correction(self))
+                               command=lambda: parent.enter_parameters(self))
         btn2.pack(side='right', padx=100)
 
     def init_correction(self):
