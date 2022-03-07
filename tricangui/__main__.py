@@ -167,9 +167,9 @@ class MainApp(tk.Tk):
         child.ax.plot(0, 0, '.w')
 
         child.canvas = tkagg.FigureCanvasTkAgg(fig, frame)
-        child.canvas.show()
+        child.canvas.draw()
         child.canvas.get_tk_widget().pack(fill='both', expand=True, side='top')
-        nav = tkagg.NavigationToolbar2TkAgg(child.canvas, frame)
+        nav = tkagg.NavigationToolbar2Tk(child.canvas, frame)
         nav.pack(side='bottom')
 
 
